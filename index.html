@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarmitaManager Pro - Sistema Completo de Gestão</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter e Courier Prime para Cupom -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a', 950: '#090d16' },
+                        brand: { orange: '#ea580c', orangeHover: '#c2410c', amber: '#f59e0b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Courier Prime', 'Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .bg-app-light { background-color: #f8fafc; }
+
+        /* ==========================================
+           ESTILOS DE IMPRESSÃO (PDF)
+           ========================================== */
+        @media print {
+            @page { margin: 10mm; }
+            
+            body { 
+                background: white !important; 
+                color: black !important;
+            }
+
+            /* Oculta a interface principal */
+            #auth-container, header, aside, .md\:hidden, .no-print, #sidebar {
+                display: none !important;
+            }
+
+            /* Força a exibição do relatório */
+            #main-app, main, #content-relatorios {
+                display: block !important;
+                visibility: visible !important;
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            #main-app {
+                background: white !important;
+            }
+
+            /* Esconde outros módulos dentro do main-app */
+            .content-section:not(#content-relatorios) {
+                display: none !important;
+            }
+
+            /* Estilização do relatório para impressão */
+            #content-relatorios > div {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #content-relatorios table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+
+            #content-relatorios th, #content-relatorios td {
+                border-bottom: 1px solid #ddd !important;
+                padding: 8px !important;
+            }
+            
+            /* Força a impressão de cores de fundo */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen">
+
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- ==================== AUTH / PUBLIC VIEWS ==================== -->
+        <div id="auth-container" class="min-h-screen bg-navy-900 flex items-center justify-center p-4">
+            
+            <!-- 1. LOGIN VIEW -->
+            <div id="view-login" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl mb-2 text-3xl">🍱</div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">MarmitaManager Pro</h1>
+                    <p class="text-sm text-slate-500 font-medium">Sistema Completo de Gestão</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="email" required value="admin@marmita.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Senha</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="password" required value="123456" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm transition">
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button type="button" onclick="switchAuthView('recover')" class="text-sm font-semibold text-brand-orange hover:text-brand-orangeHover transition">Esqueceu a senha?</button>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-brand-orange hover:bg-brand-orangeHover text-white font-semibold rounded-xl shadow-lg transition">Entrar</button>
+                </form>
+                <div class="text-center pt-2 border-t border-slate-100">
+                    <p class="text-sm text-slate-600">Não tem uma conta? <button type="button" onclick="switchAuthView('register')" class="font-bold text-brand-orange hover:underline">Cadastre-se</button></p>
+                </div>
+            </div>
+
+            <!-- 2. RECOVER PASSWORD VIEW -->
+            <div id="view-recover" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 hidden">
+                <div><button type="button" onclick="switchAuthView('login')" class="text-sm font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Voltar</button></div>
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl mb-2 text-3xl">🔒🔑</div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Recuperar Senha</h1>
+                </div>
+                <form onsubmit="handleRecover(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
+                        <input type="email" required placeholder="seu@email.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange text-sm">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-brand-orange hover:bg-brand-orangeHover text-white font-semibold rounded-xl shadow-lg transition">Enviar Link</button>
+                </form>
+            </div>
+
+            <!-- 3. REGISTER VIEW -->
+            <div id="view-register" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-5 hidden">
+                <div><button type="button" onclick="switchAuthView('login')" class="text-sm font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Voltar ao Login</button></div>
+                <div class="text-center">
+                    <h1 class="text-xl font-bold text-slate-900">CRM MarmitaManager Pro</h1>
+                    <p class="text-xs text-slate-500 mt-1">Comece a gerenciar sua marmitaria</p>
+                </div>
+                <form onsubmit="handleRegister(event)" class="space-y-3.5">
+                    <div><input type="text" required placeholder="Nome Completo" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></div>
+                    <div><input type="email" required placeholder="Email" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></div>
+                    <div><input type="password" minlength="6" required placeholder="Senha (mínimo 6 caracteres)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></div>
+                    <button type="submit" class="w-full py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs mt-2">Criar Conta</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
+        <div id="main-app" class="flex-1 flex flex-col md:flex-row bg-app-light hidden min-h-screen">
+
+            <!-- Mobile Menu Toggle Button -->
+            <div class="md:hidden bg-navy-800 text-white p-4 flex justify-between items-center border-b border-slate-700 no-print">
+                <div class="flex items-center gap-2"><span class="text-xl">🍱</span><span class="font-bold header-app-name">Sabor Caseiro</span></div>
+                <button onclick="toggleMobileMenu()" class="p-2 rounded hover:bg-slate-700"><i class="fa-solid fa-bars text-xl"></i></button>
+            </div>
+
+            <!-- Sidebar -->
+            <aside id="sidebar" class="w-full md:w-64 bg-navy-800 text-slate-300 flex-shrink-0 hidden md:flex flex-col justify-between min-h-full no-print">
+                <div>
+                    <div class="p-6 border-b border-slate-700/60">
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl">🍱</div>
+                            <div>
+                                <h1 class="font-bold text-white text-base leading-tight header-app-name">Sabor Caseiro</h1>
+                                <p class="text-xs text-brand-orange font-semibold">Pro Dashboard</p>
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="p-4 space-y-1.5">
+                        <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition text-white bg-brand-orange"><i class="fa-solid fa-border-all w-5"></i><span>Dashboard</span></button>
+                        <button onclick="navigate('pedidos')" id="nav-pedidos" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-box w-5"></i><span>Pedidos</span></button>
+                        <button onclick="navigate('clientes')" id="nav-clientes" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-users w-5"></i><span>Clientes</span></button>
+                        <button onclick="navigate('cardapio')" id="nav-cardapio" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-utensils w-5"></i><span>Cardápio</span></button>
+                        <button onclick="navigate('financeiro')" id="nav-financeiro" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-dollar-sign w-5"></i><span>Financeiro</span></button>
+                        <button onclick="navigate('relatorios')" id="nav-relatorios" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-chart-line w-5"></i><span>Relatórios</span></button>
+                        <button onclick="navigate('configuracoes')" id="nav-configuracoes" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition hover:bg-slate-700/50"><i class="fa-solid fa-gear w-5"></i><span>Configurações</span></button>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 flex flex-col overflow-x-hidden min-h-screen">
+                
+                <!-- Topbar Header -->
+                <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm no-print">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800" id="header-title">MarmitaManager Pro</h2>
+                        <p class="text-xs text-slate-500 capitalize" id="current-date"></p>
+                    </div>
+                    <div class="flex items-center gap-4 self-end sm:self-auto">
+                        <div class="flex items-center gap-3">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-xs font-bold text-slate-800">Administrador</p>
+                                <p class="text-[11px] text-slate-500" id="header-email">contato@saborcaseiro.com.br</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-brand-orange text-white font-bold flex items-center justify-center text-sm shadow">A</div>
+                        </div>
+                        <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition" title="Sair"><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+                    </div>
+                </header>
+
+                <div class="p-6 flex-1 space-y-6">
+
+                    <!-- 1. DASHBOARD VIEW -->
+                    <div id="content-dashboard" class="content-section space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Pedidos Hoje</span><div class="text-3xl font-extrabold text-slate-900" id="stat-pedidos-hoje">0</div></div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Faturamento Hoje</span><div class="text-3xl font-extrabold text-slate-900" id="stat-faturamento-hoje">R$ 0,00</div></div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Clientes Ativos</span><div class="text-3xl font-extrabold text-slate-900" id="stat-clientes-ativos">0</div></div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Ticket Médio</span><div class="text-3xl font-extrabold text-slate-900" id="stat-ticket-medio">R$ 0,00</div></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-slate-800">Últimos Pedidos</h3>
+                                <button onclick="navigate('pedidos')" class="px-4 py-2 bg-brand-orange text-white font-semibold rounded-xl text-xs">Ver Todos</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100 pb-2">
+                                            <th class="py-3 px-2">Cliente</th><th class="py-3 px-2">Marmitas</th><th class="py-3 px-2">Valor</th><th class="py-3 px-2">Status</th><th class="py-3 px-2">Horário</th><th class="py-3 px-2 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboard-orders-table" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. PEDIDOS VIEW -->
+                    <div id="content-pedidos" class="content-section space-y-4 hidden">
+                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                            <div class="relative flex-1 max-w-md">
+                                <input type="text" id="search-pedidos" oninput="renderOrdersTable()" placeholder="Buscar pedidos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            </div>
+                            <button onclick="openModal('modal-pedido')" class="px-4 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Novo Pedido</button>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-slate-800">Gerenciar Pedidos</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100">
+                                            <th class="py-3 px-2">ID</th><th class="py-3 px-2">Cliente</th><th class="py-3 px-2">Marmitas</th><th class="py-3 px-2">Total</th><th class="py-3 px-2">Status</th><th class="py-3 px-2">Data/Hora</th><th class="py-3 px-2 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pedidos-table" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. CLIENTES VIEW -->
+                    <div id="content-clientes" class="content-section space-y-4 hidden">
+                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                            <div class="relative flex-1 max-w-md">
+                                <input type="text" id="search-clientes" oninput="renderCustomersTable()" placeholder="Buscar clientes..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            </div>
+                            <button onclick="openModal('modal-cliente')" class="px-4 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Novo Cliente</button>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-slate-800">Clientes</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100">
+                                            <th class="py-3 px-2">Nome</th><th class="py-3 px-2">Telefone</th><th class="py-3 px-2">Endereço</th><th class="py-3 px-2">Total Pedidos</th><th class="py-3 px-2">Último Pedido</th><th class="py-3 px-2 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientes-table" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. CARDÁPIO VIEW -->
+                    <div id="content-cardapio" class="content-section space-y-4 hidden">
+                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                            <div class="flex gap-2">
+                                <button onclick="filterMenu('Todos')" class="menu-cat-btn active px-4 py-2 rounded-xl text-xs font-semibold border border-brand-orange bg-brand-orange text-white">Todos</button>
+                                <button onclick="filterMenu('Tradicional')" class="menu-cat-btn px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white">Tradicional</button>
+                                <button onclick="filterMenu('Fit')" class="menu-cat-btn px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white">Fit</button>
+                                <button onclick="filterMenu('Vegetariana')" class="menu-cat-btn px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white">Vegetariana</button>
+                            </div>
+                            <button onclick="openModal('modal-cardapio')" class="px-4 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Novo Item</button>
+                        </div>
+                        <div id="cardapio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+
+                    <!-- 5. FINANCEIRO VIEW -->
+                    <div id="content-financeiro" class="content-section space-y-6 hidden">
+                        <div class="flex border-b border-slate-200 gap-4">
+                            <button id="tab-fin-resumo" onclick="switchFinTab('resumo')" class="fin-tab-btn pb-3 text-sm font-bold text-brand-orange border-b-2 border-brand-orange">Resumo</button>
+                            <button id="tab-fin-despesas" onclick="switchFinTab('despesas')" class="fin-tab-btn pb-3 text-sm font-medium text-slate-500">Custos & Despesas</button>
+                            <button id="tab-fin-nfe" onclick="switchFinTab('nfe')" class="fin-tab-btn pb-3 text-sm font-medium text-slate-500">Notas Fiscais</button>
+                        </div>
+
+                        <div id="fin-subview-resumo" class="fin-subview space-y-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Receita Total</span><div class="text-2xl font-extrabold text-slate-900" id="fin-receita">R$ 0,00</div></div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Total Despesas</span><div class="text-2xl font-extrabold text-slate-900" id="fin-despesas">R$ 0,00</div></div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Lucro Líquido</span><div class="text-2xl font-extrabold text-rose-600" id="fin-lucro">R$ 0,00</div></div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Margem de Lucro</span><div class="text-2xl font-extrabold text-rose-600" id="fin-margem">0%</div></div>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                                    <h3 class="text-lg font-bold text-slate-800">Despesas por Categoria</h3>
+                                    <div class="space-y-4" id="fin-expenses-breakdown"></div>
+                                </div>
+                                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                                    <h3 class="text-lg font-bold text-slate-800">Últimas Vendas</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left text-sm">
+                                            <thead>
+                                                <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100">
+                                                    <th class="py-2.5 px-2">Cliente</th><th class="py-2.5 px-2">Data</th><th class="py-2.5 px-2 text-right">Valor</th><th class="py-2.5 px-2 text-right">Nota Fiscal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="financeiro-vendas-table" class="divide-y divide-slate-100"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fin-subview-despesas" class="fin-subview space-y-6 hidden">
+                            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="filterExpensesCategory('Todos')" class="exp-cat-btn active px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-brand-orange bg-brand-orange text-white">Todos</button>
+                                    <button onclick="filterExpensesCategory('Ingredientes')" class="exp-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white">Ingredientes</button>
+                                    <button onclick="filterExpensesCategory('Manutenção')" class="exp-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white">Manutenção</button>
+                                </div>
+                                <button onclick="openModal('modal-despesa')" class="px-4 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Nova Despesa</button>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-lg font-bold text-slate-800">Registro de Custos e Despesas</h3>
+                                    <span class="text-xs text-slate-500">Total Filtrado: <strong id="expense-filtered-total" class="text-slate-800">R$ 0,00</strong></span>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead>
+                                            <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100">
+                                                <th class="py-3 px-2">Descrição</th><th class="py-3 px-2">Categoria</th><th class="py-3 px-2">Data</th><th class="py-3 px-2">Forma Pgto</th><th class="py-3 px-2 text-right">Valor</th><th class="py-3 px-2 text-right">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="despesas-table" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fin-subview-nfe" class="fin-subview space-y-6 hidden">
+                            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                                <div class="relative flex-1 max-w-md">
+                                    <input type="text" id="search-nfe" oninput="renderNFeTable()" placeholder="Buscar por cliente ou chave..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs bg-white">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                </div>
+                                <button onclick="openModal('modal-nfe-issue')" class="px-4 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-file-invoice-dollar"></i> Emitir Nota Fiscal</button>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-lg font-bold text-slate-800">Notas Fiscais (NFC-e)</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead>
+                                            <tr class="text-slate-400 font-semibold text-xs border-b border-slate-100">
+                                                <th class="py-3 px-2">Nº Nota</th><th class="py-3 px-2">Cliente / Documento</th><th class="py-3 px-2">Emissão</th><th class="py-3 px-2">Valor Total</th><th class="py-3 px-2">Status</th><th class="py-3 px-2 text-right">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="nfe-table" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. RELATÓRIOS VIEW -->
+                    <div id="content-relatorios" class="content-section space-y-6 hidden">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Período</label>
+                                    <select id="report-period" onchange="generateReport()" class="w-full sm:w-48 p-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-slate-50">
+                                        <option value="semana" selected>Última Semana</option>
+                                        <option value="mes">Último Mês</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Tipo de Relatório</label>
+                                    <select id="report-type" onchange="generateReport()" class="w-full sm:w-56 p-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-slate-50">
+                                        <option value="vendas" selected>Vendas Consolidadas</option>
+                                        <option value="despesas">Despesas & Custos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="self-end md:self-auto">
+                                <button onclick="exportReportPDF()" class="w-full sm:w-auto px-5 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow"><i class="fa-solid fa-file-pdf"></i> Exportar PDF</button>
+                            </div>
+                        </div>
+
+                        <div id="report-summary-cards" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800" id="report-title">Relatório de Vendas Consolidadas</h3>
+                                    <p class="text-xs text-slate-500" id="report-subtitle">Dados do período: Última Semana</p>
+                                </div>
+                                <span class="px-3 py-1 bg-amber-50 text-brand-orange font-bold text-xs rounded-full border border-amber-200">Consolidado</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead id="report-table-head"></thead>
+                                    <tbody id="report-table-body" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. CONFIGURAÇÕES VIEW -->
+                    <div id="content-configuracoes" class="content-section space-y-6 hidden">
+                        <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6 max-w-3xl">
+                            <div class="border-b border-slate-100 pb-4">
+                                <h3 class="text-xl font-bold text-slate-800">Configurações da Marmitaria</h3>
+                            </div>
+                            <form onsubmit="handleSaveSettings(event)" class="space-y-5 text-sm">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div><label class="block font-semibold text-slate-700 mb-1.5 text-xs">Nome da Marmitaria</label><input type="text" id="cfg-name" required value="Sabor Caseiro Marmitaria" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                                    <div><label class="block font-semibold text-slate-700 mb-1.5 text-xs">Telefone</label><input type="text" id="cfg-phone" required value="(11) 98888-7777" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                                </div>
+                                <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                                    <span id="cfg-toast" class="text-xs font-bold text-emerald-600 hidden">Configurações salvas!</span>
+                                    <button type="submit" class="px-6 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs ml-auto">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- 1. MODAL NFC-e (PADRÃO CUPOM FISCAL BRASILEIRO) -->
+    <div id="modal-nfse" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[95vh]">
+            
+            <!-- Modal Header (Oculto na impressão) -->
+            <div class="p-4 bg-slate-100 border-b flex justify-between items-center no-print">
+                <h3 class="font-bold text-slate-800">Visualizar Cupom Fiscal</h3>
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="px-3 py-1.5 bg-brand-orange text-white font-semibold rounded-xl text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i> Imprimir</button>
+                    <button onclick="closeModal('modal-nfse')" class="p-1.5 text-slate-500 hover:text-slate-800 text-lg font-bold">✕</button>
+                </div>
+            </div>
+
+            <!-- Corpo do Cupom (Estilo Térmico/Monoespaçado) -->
+            <div class="p-6 overflow-y-auto bg-white font-mono text-xs text-black leading-tight print:p-0 print:m-0">
+                
+                <!-- Cabeçalho -->
+                <div class="text-center space-y-1 mb-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Logo_da_MarmitaManager.svg/200px-Logo_da_MarmitaManager.svg.png" alt="Logo" class="h-10 mx-auto object-contain hidden" onerror="this.style.display='none'">
+                    <div class="text-sm font-bold uppercase" id="nfce-company-name">SABOR CASEIRO MARMITARIA</div>
+                    <div>CNPJ: <span id="nfce-company-cnpj">12.345.678/0001-90</span></div>
+                    <div>IE: 123.456.789.000</div>
+                    <div>RUA GASTRONÔMICA, 500 - CENTRO</div>
+                    <div>SAO PAULO - SP</div>
+                </div>
+
+                <div class="border-t border-dashed border-black my-2"></div>
+
+                <!-- Título DANFE -->
+                <div class="text-center font-bold mb-2">
+                    <div class="text-sm">DANFE NFC-e - Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</div>
+                    <div class="text-[10px] mt-1">NFC-e não permite aproveitamento de crédito de ICMS</div>
+                </div>
+
+                <!-- Tabela de Itens -->
+                <table class="w-full text-left mb-2 text-[11px]">
+                    <thead>
+                        <tr class="border-b border-black">
+                            <th class="py-1">Código</th>
+                            <th class="py-1">Descrição</th>
+                            <th class="py-1 text-center">Qtd</th>
+                            <th class="py-1 text-center">Un</th>
+                            <th class="py-1 text-right">Vl Unit</th>
+                            <th class="py-1 text-right">Vl Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="nfce-items-body">
+                        <!-- Injetado via JS -->
+                    </tbody>
+                </table>
+
+                <div class="border-t border-dashed border-black my-2"></div>
+
+                <!-- Totais -->
+                <div class="space-y-1 mb-2">
+                    <div class="flex justify-between font-bold">
+                        <span>QTD. TOTAL DE ITENS</span>
+                        <span id="nfce-total-items">0</span>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span>VALOR TOTAL R$</span>
+                        <span id="nfce-total-value">0,00</span>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span>FORMA DE PAGAMENTO</span>
+                        <span>VALOR PAGO</span>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span>01-Dinheiro</span>
+                        <span id="nfce-total-paid">0,00</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-dashed border-black my-2"></div>
+
+                <!-- Impostos -->
+                <div class="flex justify-between text-[10px] mb-2">
+                    <span>Inf. dos Tributos Totais Incidentes (Lei Federal 12.741/2012)</span>
+                    <span>R$ <span id="nfce-taxes">0,00</span></span>
+                </div>
+
+                <div class="border-t border-dashed border-black my-2"></div>
+
+                <!-- Dados da Nota -->
+                <div class="space-y-1 text-[11px] mb-2">
+                    <div>Nº <span id="nfce-number">000.000</span> Série: 001 Data de emissão: <span id="nfce-date">00/00/0000 00:00:00</span></div>
+                    <div class="text-center font-bold mt-2">CHAVE DE ACESSO</div>
+                    <div class="text-center break-all font-mono" id="nfce-access-key">0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000</div>
+                    <div class="text-center mt-2">Consulta via leitor de QR Code</div>
+                </div>
+
+                <!-- Consumidor -->
+                <div class="text-center space-y-1 mb-2 mt-4">
+                    <div class="font-bold">CONSUMIDOR</div>
+                    <div>CNPJ / CPF / ID Estrangeiro:</div>
+                    <div id="nfce-consumer-doc">000.000.000-00</div>
+                </div>
+
+                <div class="border-t border-dashed border-black my-4"></div>
+
+                <!-- QR Code -->
+                <div class="flex flex-col items-center justify-center my-4">
+                    <div class="font-bold mb-2">Consulta via leitor de QR Code</div>
+                    <img id="nfce-qrcode" src="" alt="QR Code NFC-e" class="w-40 h-40">
+                </div>
+
+                <div class="border-t border-dashed border-black my-2"></div>
+
+                <!-- Protocolo -->
+                <div class="flex justify-between text-[10px] mt-4">
+                    <span>Protocolo de Autorização:</span>
+                    <span id="nfce-protocol">000000000000000 00/00/0000 00:00:00</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MODAL EMISSÃO NFC-e -->
+    <div id="modal-nfe-issue" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800">Emitir Cupom Fiscal (NFC-e)</h3>
+                <button onclick="closeModal('modal-nfe-issue')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="handleIssueNFeSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Vincular a Pedido *</label>
+                    <select id="nfe-order-select" required class="w-full p-2.5 rounded-xl border border-slate-200 text-xs">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">CPF na Nota (Opcional)</label>
+                    <input type="text" id="nfe-doc" placeholder="123.456.789-00" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-orange hover:bg-brand-orangeHover text-white font-semibold rounded-xl text-xs transition">Gerar & Visualizar</button>
+                    <button type="button" onclick="closeModal('modal-nfe-issue')" class="flex-1 py-2.5 bg-slate-500 hover:bg-slate-600 text-white font-semibold rounded-xl text-xs transition">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAL NOVO PEDIDO -->
+    <div id="modal-pedido" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800">Novo Pedido</h3>
+                <button onclick="closeModal('modal-pedido')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="handleSaveOrder(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Cliente *</label>
+                    <select id="order-customer" required class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-700">Itens do Pedido *</label>
+                    <div id="order-items-list" class="space-y-2"></div>
+                    <button type="button" onclick="addOrderItemRow()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-xl text-xs transition flex items-center justify-center gap-1"><i class="fa-solid fa-plus text-xs"></i> Adicionar Item</button>
+                </div>
+                <div class="text-right font-bold text-slate-800 text-xs">Total: <span id="order-modal-total" class="text-brand-orange text-sm">R$ 0,00</span></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs">Salvar</button>
+                    <button type="button" onclick="closeModal('modal-pedido')" class="flex-1 py-2.5 bg-slate-500 text-white font-semibold rounded-xl text-xs">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. MODAL NOVO CLIENTE -->
+    <div id="modal-cliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800">Novo Cliente</h3>
+                <button onclick="closeModal('modal-cliente')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="handleSaveCustomer(event)" class="space-y-4">
+                <div><input type="text" id="cust-name" required placeholder="Nome Completo *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div><input type="tel" id="cust-phone" required placeholder="Telefone *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div><input type="text" id="cust-address" required placeholder="Endereço Completo *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs">Salvar</button>
+                    <button type="button" onclick="closeModal('modal-cliente')" class="flex-1 py-2.5 bg-slate-500 text-white font-semibold rounded-xl text-xs">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. MODAL NOVO ITEM CARDÁPIO -->
+    <div id="modal-cardapio" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800">Novo Item</h3>
+                <button onclick="closeModal('modal-cardapio')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="handleSaveMenuItem(event)" class="space-y-4">
+                <div><input type="text" id="item-name" required placeholder="Nome *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div><textarea id="item-desc" required placeholder="Descrição *" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></textarea></div>
+                <div><input type="number" step="0.50" id="item-price" required placeholder="Preço (R$) *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs">Salvar</button>
+                    <button type="button" onclick="closeModal('modal-cardapio')" class="flex-1 py-2.5 bg-slate-500 text-white font-semibold rounded-xl text-xs">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. MODAL NOVA DESPESA -->
+    <div id="modal-despesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800">Nova Despesa</h3>
+                <button onclick="closeModal('modal-despesa')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="handleSaveExpense(event)" class="space-y-4">
+                <div><input type="text" id="exp-desc" required placeholder="Descrição *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="exp-cat" required class="w-full p-2.5 rounded-xl border border-slate-200 text-xs">
+                        <option value="Ingredientes">Ingredientes</option>
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Gás & Energia">Gás & Energia</option>
+                    </select>
+                    <input type="number" step="0.01" id="exp-amount" required placeholder="Valor *" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-orange text-white font-semibold rounded-xl text-xs">Salvar</button>
+                    <button type="button" onclick="closeModal('modal-despesa')" class="flex-1 py-2.5 bg-slate-500 text-white font-semibold rounded-xl text-xs">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // Application Global State
+        let state = {
+            settings: { name: "SABOR CASEIRO MARMITARIA", phone: "(11) 98888-7777", email: "contato@saborcaseiro.com.br", address: "Rua Gastronômica, 500 - Centro", cnpj: "12.345.678/0001-90" },
+            customers: [
+                { id: 1, name: "João Silva", phone: "(11) 99999-9999", email: "joao@email.com", address: "Rua das Flores, 123", totalOrders: 8, lastOrder: "2026-01-15" },
+                { id: 2, name: "Maria Santos", phone: "(11) 98888-8888", email: "maria@email.com", address: "Av. Paulista, 1000", totalOrders: 5, lastOrder: "2026-01-14" },
+                { id: 3, name: "Pedro Oliveira", phone: "(11) 97777-7777", email: "pedro@email.com", address: "Rua Augusta, 500", totalOrders: 12, lastOrder: "2026-01-15" }
+            ],
+            menu: [
+                { id: 1, name: "Marmita Tradicional", category: "Tradicional", price: 25.90, desc: "Arroz, feijão, bife e batata." },
+                { id: 2, name: "Marmita Fit", category: "Fit", price: 27.90, desc: "Arroz integral, frango e legumes." },
+                { id: 3, name: "Marmita Executiva", category: "Tradicional", price: 41.90, desc: "Picanha, mandioca, arroz e farofa." }
+            ],
+            orders: [
+                { id: 1, customer: "João Silva", items: [{ name: "Marmita Tradicional", qty: 2, price: 25.90 }], total: 51.80, status: "Entregue", time: "2026-01-15 12:30" },
+                { id: 2, customer: "Maria Santos", items: [{ name: "Marmita Fit", qty: 1, price: 27.90 }], total: 27.90, status: "Preparando", time: "2026-01-15 11:45" },
+                { id: 3, customer: "Pedro Oliveira", items: [{ name: "Marmita Executiva", qty: 1, price: 41.90 }], total: 41.90, status: "Entregue", time: "2026-01-15 13:15" }
+            ],
+            expenses: [
+                { id: 1, desc: "Açougue Semanal", category: "Ingredientes", date: "2026-01-14", amount: 533.10 },
+                { id: 2, desc: "Manutenção Fogão", category: "Manutenção", date: "2026-01-10", amount: 200.00 }
+            ],
+            invoices: [],
+            activeCategory: 'Todos',
+            activeExpenseCategory: 'Todos'
+        };
+
+        function switchAuthView(viewName) {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-recover').classList.add('hidden');
+            document.getElementById('view-register').classList.add('hidden');
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            updateDashboardStats();
+            renderAllTables();
+        }
+
+        function handleRecover(e) { e.preventDefault(); alert("Link enviado!"); switchAuthView('login'); }
+        function handleRegister(e) { e.preventDefault(); alert("Conta criada!"); switchAuthView('login'); }
+        function handleLogout() { document.getElementById('main-app').classList.add('hidden'); document.getElementById('auth-container').classList.remove('hidden'); switchAuthView('login'); }
+        function toggleMobileMenu() { document.getElementById('sidebar').classList.toggle('hidden'); }
+
+        function navigate(section) {
+            document.querySelectorAll('.nav-item').forEach(btn => { btn.classList.remove('bg-brand-orange', 'text-white'); btn.classList.add('hover:bg-slate-700/50'); });
+            const activeNav = document.getElementById(`nav-${section}`);
+            if (activeNav) { activeNav.classList.add('bg-brand-orange', 'text-white'); activeNav.classList.remove('hover:bg-slate-700/50'); }
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`content-${section}`).classList.remove('hidden');
+            
+            const titles = { dashboard: 'Dashboard', pedidos: 'Pedidos', clientes: 'Clientes', cardapio: 'Cardápio', financeiro: 'Financeiro', relatorios: 'Relatórios', configuracoes: 'Configurações' };
+            document.getElementById('header-title').innerText = titles[section];
+            
+            if (section === 'relatorios') generateReport();
+        }
+
+        function switchFinTab(subtab) {
+            document.querySelectorAll('.fin-tab-btn').forEach(btn => { btn.classList.remove('font-bold', 'text-brand-orange', 'border-b-2', 'border-brand-orange'); btn.classList.add('font-medium', 'text-slate-500'); });
+            document.getElementById(`tab-fin-${subtab}`).classList.add('font-bold', 'text-brand-orange', 'border-b-2', 'border-brand-orange');
+            document.querySelectorAll('.fin-subview').forEach(view => view.classList.add('hidden'));
+            document.getElementById(`fin-subview-${subtab}`).classList.remove('hidden');
+            
+            if (subtab === 'despesas') renderExpensesTable();
+            if (subtab === 'nfe') renderNFeTable();
+        }
+
+        function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val); }
+        function getStatusBadge(status) {
+            if (status === 'Entregue' || status === 'Emitida') return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">${status}</span>`;
+            if (status === 'Preparando' || status === 'Pendente') return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">${status}</span>`;
+            return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">${status}</span>`;
+        }
+
+        /* ==================== NFC-e CUPOM FISCAL ==================== */
+        function openNFSEModal(orderId) {
+            const order = state.orders.find(o => o.id == orderId) || state.orders[0];
+            const customer = state.customers.find(c => c.name === order.customer) || { name: order.customer };
+
+            // Cabeçalho
+            document.getElementById('nfce-company-name').innerText = state.settings.name;
+            document.getElementById('nfce-company-cnpj').innerText = state.settings.cnpj;
+
+            // Itens
+            const itemsBody = document.getElementById('nfce-items-body');
+            itemsBody.innerHTML = '';
+            let totalQty = 0;
+            order.items.forEach((item, index) => {
+                totalQty += item.qty;
+                const subtotal = item.qty * item.price;
+                itemsBody.innerHTML += `
+                    <tr>
+                        <td class="py-1">${String(index + 1).padStart(3, '0')}</td>
+                        <td class="py-1 truncate max-w-[120px]">${item.name.toUpperCase()}</td>
+                        <td class="py-1 text-center">${item.qty}</td>
+                        <td class="py-1 text-center">UN</td>
+                        <td class="py-1 text-right">${item.price.toFixed(2).replace('.', ',')}</td>
+                        <td class="py-1 text-right">${subtotal.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            });
+
+            // Totais
+            document.getElementById('nfce-total-items').innerText = totalQty;
+            document.getElementById('nfce-total-value').innerText = order.total.toFixed(2).replace('.', ',');
+            document.getElementById('nfce-total-paid').innerText = order.total.toFixed(2).replace('.', ',');
+            document.getElementById('nfce-taxes').innerText = (order.total * 0.05).toFixed(2).replace('.', ',');
+
+            // Dados Fictícios do Cupom
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+            const randomKey = Math.floor(Math.random() * 9000000000000000000000000000000000000000) + 1000000000000000000000000000000000000000;
+            const keyFormatted = String(randomKey).match(/.{1,4}/g).join(' ');
+
+            document.getElementById('nfce-number').innerText = String(order.id).padStart(6, '0');
+            document.getElementById('nfce-date').innerText = dateStr;
+            document.getElementById('nfce-access-key').innerText = keyFormatted;
+            document.getElementById('nfce-protocol').innerText = `1${Math.floor(Math.random() * 900000000000000)} ${dateStr.slice(0, 10)} ${dateStr.slice(11)}`;
+            document.getElementById('nfce-consumer-doc').innerText = customer.cpf || "Consumidor Não Identificado";
+
+            // QR Code
+            const qrData = `https://www.sefazexemplo.gov.br/qrcode?chave=${randomKey}`;
+            document.getElementById('nfce-qrcode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
+
+            document.getElementById('modal-nfse').classList.remove('hidden');
+        }
+
+        /* ==================== RENDERIZAÇÃO GERAL ==================== */
+        function updateDashboardStats() {
+            const totalOrders = state.orders.length;
+            const totalRevenue = state.orders.reduce((acc, o) => acc + o.total, 0);
+            const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            document.getElementById('stat-pedidos-hoje').innerText = totalOrders;
+            document.getElementById('stat-faturamento-hoje').innerText = formatCurrency(totalRevenue);
+            document.getElementById('stat-clientes-ativos').innerText = state.customers.length;
+            document.getElementById('stat-ticket-medio').innerText = formatCurrency(avgTicket);
+        }
+
+        function renderAllTables() {
+            renderDashboardTable();
+            renderOrdersTable();
+            renderCustomersTable();
+            renderMenuGrid();
+            renderFinancialSalesTable();
+            renderExpensesTable();
+            renderNFeTable();
+        }
+
+        function renderDashboardTable() {
+            const tbody = document.getElementById('dashboard-orders-table');
+            tbody.innerHTML = '';
+            state.orders.slice(0, 4).forEach(order => {
+                const itemCount = order.items.reduce((acc, i) => acc + i.qty, 0);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-medium text-slate-800">${order.customer}</td>
+                        <td class="py-3 px-2 text-slate-600">${itemCount} itens</td>
+                        <td class="py-3 px-2 font-semibold text-slate-800">${formatCurrency(order.total)}</td>
+                        <td class="py-3 px-2">${getStatusBadge(order.status)}</td>
+                        <td class="py-3 px-2 text-slate-500 text-xs">${order.time}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="openNFSEModal(${order.id})" class="text-brand-orange hover:text-brand-orangeHover font-semibold text-xs bg-amber-50 px-2 py-1 rounded-lg border border-amber-200"><i class="fa-solid fa-receipt mr-1"></i> Cupom</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('pedidos-table');
+            const search = (document.getElementById('search-pedidos')?.value || '').toLowerCase();
+            tbody.innerHTML = '';
+            const filtered = state.orders.filter(o => o.customer.toLowerCase().includes(search) || o.items.some(i => i.name.toLowerCase().includes(search)));
+            filtered.forEach(order => {
+                const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-semibold text-slate-500">#${order.id}</td>
+                        <td class="py-3 px-2 font-medium text-slate-800">${order.customer}</td>
+                        <td class="py-3 px-2 text-xs text-slate-600">${itemsSummary}</td>
+                        <td class="py-3 px-2 font-semibold text-slate-800">${formatCurrency(order.total)}</td>
+                        <td class="py-3 px-2">${getStatusBadge(order.status)}</td>
+                        <td class="py-3 px-2 text-slate-500 text-xs">${order.time}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="openNFSEModal(${order.id})" class="text-xs bg-amber-50 hover:bg-amber-100 text-brand-orange border border-amber-200 font-bold px-2 py-1 rounded-lg">Cupom</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('clientes-table');
+            tbody.innerHTML = '';
+            state.customers.forEach(c => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-medium text-slate-800">${c.name}</td>
+                        <td class="py-3 px-2 text-slate-600">${c.phone}</td>
+                        <td class="py-3 px-2 text-slate-600 text-xs">${c.address}</td>
+                        <td class="py-3 px-2 font-semibold text-slate-800">${c.totalOrders}</td>
+                        <td class="py-3 px-2 text-slate-500 text-xs">${c.lastOrder}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="deleteCustomer(${c.id})" class="text-rose-600 hover:text-rose-700"><i class="fa-regular fa-trash-can"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderMenuGrid() {
+            const grid = document.getElementById('cardapio-grid');
+            grid.innerHTML = '';
+            const filtered = state.activeCategory === 'Todos' ? state.menu : state.menu.filter(m => m.category === state.activeCategory);
+            filtered.forEach(item => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-slate-800 text-base">${item.name}</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-brand-orange border border-amber-200">${item.category}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2">${item.desc}</p>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-3">
+                            <span class="text-lg font-extrabold text-slate-900">${formatCurrency(item.price)}</span>
+                            <button onclick="deleteMenuItem(${item.id})" class="text-xs text-rose-600 hover:underline">Excluir</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderFinancialSalesTable() {
+            const tbody = document.getElementById('financeiro-vendas-table');
+            tbody.innerHTML = '';
+            state.orders.forEach(o => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-2.5 px-2 font-medium text-slate-800">${o.customer}</td>
+                        <td class="py-2.5 px-2 text-slate-500 text-xs">${o.time}</td>
+                        <td class="py-2.5 px-2 text-right font-bold text-slate-800">${formatCurrency(o.total)}</td>
+                        <td class="py-2.5 px-2 text-right"><button onclick="openNFSEModal(${o.id})" class="text-xs font-bold text-brand-orange hover:underline">Cupom</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderExpensesTable() {
+            const tbody = document.getElementById('despesas-table');
+            tbody.innerHTML = '';
+            const filtered = state.activeExpenseCategory === 'Todos' ? state.expenses : state.expenses.filter(e => e.category === state.activeExpenseCategory);
+            const filteredTotal = filtered.reduce((acc, e) => acc + e.amount, 0);
+            document.getElementById('expense-filtered-total').innerText = formatCurrency(filteredTotal);
+
+            filtered.forEach(e => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-medium text-slate-800">${e.desc}</td>
+                        <td class="py-3 px-2"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">${e.category}</span></td>
+                        <td class="py-3 px-2 text-slate-500 text-xs">${e.date}</td>
+                        <td class="py-3 px-2 text-slate-600 text-xs">PIX</td>
+                        <td class="py-3 px-2 text-right font-bold text-slate-800">${formatCurrency(e.amount)}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="deleteExpense(${e.id})" class="text-rose-600"><i class="fa-regular fa-trash-can"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderNFeTable() {
+            const tbody = document.getElementById('nfe-table');
+            tbody.innerHTML = '';
+            state.invoices.forEach(nfe => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-bold text-slate-800">${nfe.number}</td>
+                        <td class="py-3 px-2"><p class="font-medium text-slate-800">${nfe.customer}</p></td>
+                        <td class="py-3 px-2 text-slate-500 text-xs">${nfe.date}</td>
+                        <td class="py-3 px-2 font-bold text-slate-800">${formatCurrency(nfe.amount)}</td>
+                        <td class="py-3 px-2">${getStatusBadge(nfe.status)}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="openNFSEModal(${nfe.orderId})" class="px-3 py-1 bg-amber-50 text-brand-orange border border-amber-200 rounded-lg text-xs font-bold"><i class="fa-solid fa-eye"></i> Ver</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        /* ==================== RELATÓRIOS LOGIC ==================== */
+        function generateReport() {
+            const type = document.getElementById('report-type').value;
+            const summaryCards = document.getElementById('report-summary-cards');
+            const tableHead = document.getElementById('report-table-head');
+            const tableBody = document.getElementById('report-table-body');
+
+            if (type === 'vendas') {
+                const totalVendas = state.orders.reduce((sum, o) => sum + o.total, 0);
+                summaryCards.innerHTML = `
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Volume de Pedidos</span><p class="text-2xl font-extrabold text-slate-800">${state.orders.length}</p></div>
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Faturamento Bruto</span><p class="text-2xl font-extrabold text-emerald-600">${formatCurrency(totalVendas)}</p></div>
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Média por Pedido</span><p class="text-2xl font-extrabold text-brand-orange">${formatCurrency(totalVendas / (state.orders.length || 1))}</p></div>
+                `;
+                tableHead.innerHTML = `
+                    <tr class="text-slate-400 font-semibold text-xs border-b">
+                        <th class="py-3">ID</th><th class="py-3">Cliente</th><th class="py-3">Data/Hora</th><th class="py-3">Itens</th><th class="py-3 text-right">Valor Total</th>
+                    </tr>
+                `;
+                tableBody.innerHTML = '';
+                state.orders.forEach(o => {
+                    const items = o.items.map(i => `${i.qty}x ${i.name}`).join('<br>');
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-slate-50 text-xs">
+                            <td class="py-3 font-bold text-slate-700">#${o.id}</td>
+                            <td class="py-3 font-medium text-slate-800">${o.customer}</td>
+                            <td class="py-3 text-slate-500">${o.time}</td>
+                            <td class="py-3 text-slate-600">${items}</td>
+                            <td class="py-3 text-right font-bold text-slate-800">${formatCurrency(o.total)}</td>
+                        </tr>
+                    `;
+                });
+            } else if (type === 'despesas') {
+                const totalDespesas = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+                summaryCards.innerHTML = `
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Total Registros</span><p class="text-2xl font-extrabold text-slate-800">${state.expenses.length}</p></div>
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Total Custos</span><p class="text-2xl font-extrabold text-rose-600">${formatCurrency(totalDespesas)}</p></div>
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs font-bold text-slate-400 uppercase">Maior Categoria</span><p class="text-2xl font-extrabold text-brand-orange">Ingredientes</p></div>
+                `;
+                tableHead.innerHTML = `
+                    <tr class="text-slate-400 font-semibold text-xs border-b">
+                        <th class="py-3">Descrição</th><th class="py-3">Categoria</th><th class="py-3">Data</th><th class="py-3 text-right">Valor</th>
+                    </tr>
+                `;
+                tableBody.innerHTML = '';
+                state.expenses.forEach(e => {
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-slate-50 text-xs">
+                            <td class="py-3 font-medium text-slate-800">${e.desc}</td>
+                            <td class="py-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">${e.category}</span></td>
+                            <td class="py-3 text-slate-500">${e.date}</td>
+                            <td class="py-3 text-right font-bold text-slate-800">${formatCurrency(e.amount)}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function exportReportPDF() {
+            // O CSS via @media print já está preparado para isolar #content-relatorios
+            window.print();
+        }
+
+        /* ==================== MODAIS E FUNÇÕES AUXILIARES ==================== */
+        function openModal(modalId) {
+            if (modalId === 'modal-pedido') {
+                const select = document.getElementById('order-customer');
+                select.innerHTML = '<option value="">Selecione...</option>';
+                state.customers.forEach(c => select.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+                resetOrderItems();
+            }
+            if (modalId === 'modal-nfe-issue') {
+                const select = document.getElementById('nfe-order-select');
+                select.innerHTML = '<option value="">Selecione um pedido</option>';
+                state.orders.forEach(o => select.innerHTML += `<option value="${o.id}">Pedido #${o.id} - ${o.customer} (${formatCurrency(o.total)})</option>`);
+            }
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+        function resetOrderItems() {
+            document.getElementById('order-items-list').innerHTML = '';
+            addOrderItemRow();
+        }
+
+        function addOrderItemRow() {
+            const container = document.getElementById('order-items-list');
+            const rowId = Date.now();
+            let options = '<option value="">Selecione...</option>';
+            state.menu.forEach(m => options += `<option value="${m.id}" data-price="${m.price}">${m.name} - ${formatCurrency(m.price)}</option>`);
+            container.insertAdjacentHTML('beforeend', `
+                <div class="flex items-center gap-2" id="item-row-${rowId}">
+                    <select class="item-select flex-1 p-2 rounded-xl border text-xs" onchange="calculateModalTotal()">${options}</select>
+                    <input type="number" min="1" value="1" class="item-qty w-16 p-2 rounded-xl border text-xs text-center" onchange="calculateModalTotal()">
+                    <button type="button" onclick="document.getElementById('item-row-${rowId}').remove(); calculateModalTotal();" class="p-2 text-rose-500">✕</button>
+                </div>
+            `);
+            calculateModalTotal();
+        }
+
+        function calculateModalTotal() {
+            let total = 0;
+            document.querySelectorAll('#order-items-list > div').forEach(row => {
+                const select = row.querySelector('.item-select');
+                const qtyInput = row.querySelector('.item-qty');
+                const price = parseFloat(select.options[select.selectedIndex]?.getAttribute('data-price') || 0);
+                total += price * parseInt(qtyInput?.value || 1);
+            });
+            document.getElementById('order-modal-total').innerText = formatCurrency(total);
+            return total;
+        }
+
+        function handleSaveOrder(e) {
+            e.preventDefault();
+            const customer = document.getElementById('order-customer').value;
+            const total = calculateModalTotal();
+            if (!customer) return alert("Selecione um cliente.");
+            
+            const items = [];
+            document.querySelectorAll('#order-items-list > div').forEach(row => {
+                const select = row.querySelector('.item-select');
+                if (select.value) {
+                    const menuItem = state.menu.find(m => m.id == select.value);
+                    items.push({ name: menuItem.name, qty: parseInt(row.querySelector('.item-qty').value), price: menuItem.price });
+                }
+            });
+
+            if (items.length === 0) return alert("Adicione itens.");
+
+            state.orders.unshift({ id: state.orders.length + 1, customer, items, total, status: "Pendente", time: new Date().toLocaleString('pt-BR') });
+            updateDashboardStats();
+            renderAllTables();
+            closeModal('modal-pedido');
+        }
+
+        function handleSaveCustomer(e) {
+            e.preventDefault();
+            state.customers.push({ id: Date.now(), name: document.getElementById('cust-name').value, phone: document.getElementById('cust-phone').value, address: document.getElementById('cust-address').value, totalOrders: 0, lastOrder: "Nenhum" });
+            renderCustomersTable(); updateDashboardStats(); closeModal('modal-cliente'); e.target.reset();
+        }
+
+        function handleSaveMenuItem(e) {
+            e.preventDefault();
+            state.menu.push({ id: Date.now(), name: document.getElementById('item-name').value, desc: document.getElementById('item-desc').value, price: parseFloat(document.getElementById('item-price').value), category: "Tradicional" });
+            renderMenuGrid(); closeModal('modal-cardapio'); e.target.reset();
+        }
+
+        function handleSaveExpense(e) {
+            e.preventDefault();
+            state.expenses.unshift({ id: Date.now(), desc: document.getElementById('exp-desc').value, category: document.getElementById('exp-cat').value, amount: parseFloat(document.getElementById('exp-amount').value), date: new Date().toLocaleDateString('pt-BR') });
+            renderExpensesTable(); closeModal('modal-despesa'); e.target.reset();
+        }
+
+        function handleIssueNFeSubmit(e) {
+            e.preventDefault();
+            const orderId = document.getElementById('nfe-order-select').value;
+            const order = state.orders.find(o => o.id == orderId);
+            if (!order) return;
+            
+            state.invoices.unshift({ id: Date.now(), number: `NFC-e ${String(state.invoices.length + 1).padStart(3, '0')}`, orderId: order.id, customer: order.customer, date: new Date().toLocaleString('pt-BR'), amount: order.total, status: "Emitida" });
+            renderNFeTable(); closeModal('modal-nfe-issue'); openNFSEModal(order.id);
+        }
+
+        function deleteCustomer(id) { state.customers = state.customers.filter(c => c.id !== id); renderCustomersTable(); }
+        function deleteMenuItem(id) { state.menu = state.menu.filter(m => m.id !== id); renderMenuGrid(); }
+        function deleteExpense(id) { state.expenses = state.expenses.filter(e => e.id !== id); renderExpensesTable(); }
+        
+        function filterMenu(cat) {
+            state.activeCategory = cat;
+            document.querySelectorAll('.menu-cat-btn').forEach(btn => btn.className = btn.innerText === cat ? "menu-cat-btn px-4 py-2 rounded-xl text-xs font-semibold border border-brand-orange bg-brand-orange text-white" : "menu-cat-btn px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white");
+            renderMenuGrid();
+        }
+
+        function filterExpensesCategory(cat) {
+            state.activeExpenseCategory = cat;
+            document.querySelectorAll('.exp-cat-btn').forEach(btn => btn.className = btn.innerText === cat ? "exp-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-brand-orange bg-brand-orange text-white" : "exp-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white");
+            renderExpensesTable();
+        }
+
+        function handleSaveSettings(e) { e.preventDefault(); alert("Salvo!"); }
+
+        window.onload = function() {
+            const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('current-date').innerText = today;
+        };
+    </script>
+</body>
+</html>
